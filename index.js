@@ -3,8 +3,9 @@ import fileUpload from 'express-fileupload';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import connectDB from './config/db.js';
 
-dotenv.config();
+dotenv.config({ path: './config/.env' });
 
 const app = express();
 
@@ -53,4 +54,9 @@ app.post('/upload', fileUpload({ useTempFiles: true }), (req, res) => {
   res.status(200).send({ success: true, message: 'File uploaded successfully!' });
 });
 
-app.listen(PORT, () => console.log(`Server is running on ${process.env.DEV_SERVER_URL}:${process.env.PORT}`));
+app.listen(PORT, async () => {
+  // connect to the database
+  await connectDB();
+
+  console.log(`Server is running on ${process.env.DEV_SERVER_URL}:${process.env.PORT}`)
+});
