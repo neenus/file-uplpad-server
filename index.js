@@ -10,6 +10,7 @@ import connectDB from './config/db.js';
 
 // Load routes
 import auth from './routes/auth.routes.js';
+import users from './routes/users.routes.js';
 
 dotenv.config({ path: './config/.env' });
 
@@ -107,6 +108,7 @@ app.post('/api/v1/upload', fileUpload({ useTempFiles: true }), (req, res, next) 
 
 // Mount routes
 app.use('/api/v1/auth', auth);
+app.use('/api/v1/users', users);
 
 // Error Handler Middleware
 app.use(errorHandler);
