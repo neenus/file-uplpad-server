@@ -3,6 +3,9 @@ import fileUpload from 'express-fileupload';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import ErrorResponse from './utils/errorResponse.js';
+import errorHandler from './middlewares/error.js';
+import fs from 'fs';
 import connectDB from './config/db.js';
 
 dotenv.config({ path: './config/.env' });
@@ -26,33 +29,81 @@ app.use(express.urlencoded({ extended: true }));
 // Morgan logger
 app.use(morgan('dev'));
 
-app.post('/upload', fileUpload({ useTempFiles: true }), (req, res) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send({ success: false, message: 'No files were uploaded.' });
-  }
+app.post('/api/v1/upload', fileUpload({ useTempFiles: true }), (req, res, next) => {
 
-  // save files in the storage folder  
-  Object.keys(req.files).forEach((key) => {
-    const file = req.files[key];
-    file.description = key;
+  if (!req.files || Object.keys(req.files).length === 0)
+    return next(new ErrorResponse('No files were uploaded.', 400));
 
-    const fileName = file.name.split('.');
-    const fileExt = fileName[fileName.length - 1];
-    fileName.pop();
-    fileName.push(key);
-    file.name = fileName.join("_") + "." + fileExt;
+  if (!req.body.description)
+    return next(new ErrorResponse('No description provided.', 400));
 
-    file.mv(`./storage/${file.name}`, (err) => {
+  if (!req.body.userName)
+    return next(new ErrorResponse('No user name provided.', 400));
+
+  const { files } = req.files;
+  const { description, userName } = req.body;
+
+  // Create a folder for the user if it doesn't exist
+  const directoryName = userName.split(' ').join('_');
+  if (!fs.existsSync(`./storage/${directoryName}`)) {
+    fs.mkdirSync(`./storage/${directoryName}`, { recursive: true }, err => {
       if (err) {
         console.error(err);
-        return res.status(500).send
-          (err);
+        return next(new ErrorResponse('Error creating user directory.', 500));
       }
+
+      console.log('User directory created successfully!');
     });
+  }
+
+  // save the description in a file and append date to the file name to avoid overwriting
+  const date = new Date();
+
+  const dateString = `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
+  const fileName = `description_${dateString}.txt`;
+
+  fs.writeFile(`./storage/${directoryName}/${fileName}.txt`, description, err => {
+    if (err) {
+      console.error(err);
+      return next(new ErrorResponse('Error saving description.', 500));
+    }
+
+    console.log('Description saved successfully!');
   });
+
+
+  // check if files is an array for multiple files, otherwise save the single file
+  if (!Array.isArray(files)) {
+    // Single file upload
+    const file = files;
+    file.mv(`./storage/${directoryName}/${file.name}`, err => {
+      if (err) {
+        console.error(err);
+        return next(new ErrorResponse('Error saving file.', 500));
+      }
+
+      console.log('File saved successfully!');
+    });
+  } else {
+    // Multiple files upload
+    // loop through all the files and save them in the storage folder
+    files.forEach(file => {
+      file.mv(`./storage/${directoryName}/${file.name}`, err => {
+        if (err) {
+          console.error(err);
+          return next(new ErrorResponse('Error saving file.', 500));
+        }
+
+        console.log('File saved successfully!');
+      });
+    });
+  }
 
   res.status(200).send({ success: true, message: 'File uploaded successfully!' });
 });
+
+// Error Handler Middleware
+app.use(errorHandler);
 
 app.listen(PORT, async () => {
   // connect to the database
