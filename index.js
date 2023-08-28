@@ -8,6 +8,9 @@ import errorHandler from './middlewares/error.js';
 import fs from 'fs';
 import connectDB from './config/db.js';
 
+// Load routes
+import auth from './routes/auth.routes.js';
+
 dotenv.config({ path: './config/.env' });
 
 const app = express();
@@ -101,6 +104,9 @@ app.post('/api/v1/upload', fileUpload({ useTempFiles: true }), (req, res, next) 
 
   res.status(200).send({ success: true, message: 'File uploaded successfully!' });
 });
+
+// Mount routes
+app.use('/api/v1/auth', auth);
 
 // Error Handler Middleware
 app.use(errorHandler);
