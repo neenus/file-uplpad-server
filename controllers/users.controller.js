@@ -50,6 +50,10 @@ export const getUser = async (req, res, next) => {
 // @access  Private/Admin
 export const updateUser = async (req, res, next) => {
 
+  // if req.body is empty, return error
+  if (Object.keys(req.body).length === 0)
+    return next(new ErrorResponse('Please provide data to update', 400));
+
   // TODO: to implement user roles so that only admin can update a user
   // check if user is admin or user is updating their own profile
   // if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
