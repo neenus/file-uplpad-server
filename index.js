@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ErrorResponse from './utils/errorResponse.js';
 import errorHandler from './middlewares/error.js';
+import cookieParser from 'cookie-parser';
 import fs from 'fs';
 import connectDB from './config/db.js';
 
@@ -29,6 +30,9 @@ app.use(cors(corsOptions));
 // Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Cookie Parser
+app.use(cookieParser());
 
 // Morgan logger
 app.use(morgan('dev'));
