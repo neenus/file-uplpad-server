@@ -5,8 +5,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ErrorResponse from './utils/errorResponse.js';
 import errorHandler from './middlewares/error.js';
+import cookieParser from 'cookie-parser';
 import fs from 'fs';
 import connectDB from './config/db.js';
+
+// Load routes
+import auth from './routes/auth.routes.js';
+import users from './routes/users.routes.js';
 
 dotenv.config({ path: './config/.env' });
 
@@ -25,6 +30,9 @@ app.use(cors(corsOptions));
 // Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Cookie Parser
+app.use(cookieParser());
 
 // Morgan logger
 app.use(morgan('dev'));
@@ -101,6 +109,10 @@ app.post('/api/v1/upload', fileUpload({ useTempFiles: true }), (req, res, next) 
 
   res.status(200).send({ success: true, message: 'File uploaded successfully!' });
 });
+
+// Mount routes
+app.use('/api/v1/auth', auth);
+app.use('/api/v1/users', users);
 
 // Error Handler Middleware
 app.use(errorHandler);

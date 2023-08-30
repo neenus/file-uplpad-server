@@ -1,25 +1,43 @@
 import ErrorResponse from '../utils/errorResponse.js';
 
 const errorHandler = (err, req, res, next) => {
-  let status = err.statusCode || 500;
-  let message = err.message || 'Server Error';
+
+  let error = { ...err };
+  error.message = err.message;
+  error.statusCode = err.statusCode;
 
   // Log to console for dev
-  console.log(err.stack.red);
+  console.log(err.stack);
 
-  if (err.name === "ValidationError") {
-    const message = Object.values(err.errors).map((val) => val.message);
-    status = 400;
-  }
+  // Mongoose bad ObjectId error - CastError
+  if (err.name === 'CastError') {
+    const message = `Resource not found with id of ${err.value}`;
+    error = new ErrorResponse(message, 404);
+  };
 
-  if (err.name === "UnauthorizedError") {
-    status = 401;
-    message = "Invalid token";
-  }
+  // Mongoose duplicate key error - MongoError
+  if (err.code === 11000) {
+    const message = 'Duplicate field value entered';
+    error = new ErrorResponse(message, 400);
+  };
 
-  res.status(status).json({
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const message = Object.values(err.errors).map(val => val.message);
+    error = new ErrorResponse(message, 400);
+  };
+
+  // JSON Web Token error
+  if (err.name === 'UnauthorizedError') {
+    const message = 'Invalid token';
+    error = new ErrorResponse(message, 401);
+  };
+
+
+  // return error response
+  res.status(error.statusCode || 500).json({
     success: false,
-    message,
+    error: error.message || 'Server Error',
   });
 };
 
