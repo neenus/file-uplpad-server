@@ -54,6 +54,26 @@ export const login = async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 };
 
+export const logout = async (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: 'Not authorized to access this route',
+    });
+  }
+
+  try {
+    res.clearCookie('token');
+    res.status(200).json({
+      success: true,
+      data: {},
+    });
+
+  } catch (error) {
+    return next(error);
+  }
+};
 
 // Helper function to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
