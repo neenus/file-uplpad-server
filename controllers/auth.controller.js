@@ -1,5 +1,6 @@
 import ErrorResponse from '../utils/errorResponse.js';
 import User from '../models/User.js';
+import jwt from 'jsonwebtoken';
 
 
 // @desc    Register user
@@ -7,10 +8,6 @@ import User from '../models/User.js';
 // @access  Public
 export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
-
-  // if (!name || !email || !password) {
-  //   return next(new ErrorResponse('Please provide all required fields', 400));
-  // }
 
   try {
     // Create user
@@ -21,10 +18,8 @@ export const register = async (req, res, next) => {
     });
 
     if (user) {
-      res.status(201).json({
-        success: true,
-        data: user,
-      });
+      // Create token and send response
+      sendTokenResponse(user, 201, res);
     }
   } catch (error) {
     return next(error);
@@ -38,7 +33,7 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   const { email, password } = req.body;
 
-  // Validate email and password
+  // Validate email and password are provided
   if (!email || !password) {
     return next(new ErrorResponse('Please provide email and password', 400));
   };
@@ -55,9 +50,32 @@ export const login = async (req, res, next) => {
     return next(new ErrorResponse('Invalid credentials', 401));
   };
 
-  // return user without password
-  res.status(200).json({
-    success: true,
-    data: user,
-  });
+  // Create token and send response
+  sendTokenResponse(user, 200, res);
+};
+
+
+// Helper function to get token from model, create cookie and send response
+const sendTokenResponse = (user, statusCode, res) => {
+  // Create Token
+  const token = user.getSignedJwtToken();
+
+  // Create cookie options
+  const options = {
+    maxAge: process.env.JWT_COOKIE_EXPIRE,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  };
+
+  // Send response
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      success: true,
+      data: {
+        user,
+        token,
+      },
+    });
 };
