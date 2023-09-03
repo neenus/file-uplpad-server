@@ -75,6 +75,22 @@ export const logout = async (req, res, next) => {
   }
 };
 
+// @desc    Get current logged in user
+// @route   GET /api/v1/auth/me
+// @access  Private
+export const getMe = async (req, res, next) => {
+  // Check if there is a user
+  if (!req.user) {
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+  }
+
+  // If there is a user, send it back
+  res.status(200).json({
+    success: true,
+    data: req.user,
+  });
+};
+
 // Helper function to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create Token
