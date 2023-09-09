@@ -10,6 +10,7 @@ import connectDB from './config/db.js';
 import auth from './routes/auth.routes.js';
 import users from './routes/users.routes.js';
 import upload from './routes/upload.routes.js';
+import health from './routes/health.routes.js';
 
 dotenv.config({ path: './config/.env' });
 
@@ -39,6 +40,7 @@ app.use(morgan('dev'));
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/users', users);
 app.use('/api/v1/upload', upload);
+app.use('/api/v1/health', health);
 
 // Error Handler Middleware
 app.use(errorHandler);
