@@ -20,6 +20,11 @@ const UserSchema = new mongoose.Schema(
       minlength: [8, "Password has to be at least 8 characters long"],
       select: false,
     },
+    dir: {
+      type: String,
+      required: [true, "Please add a directory name"],
+      unique: true
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
