@@ -18,11 +18,14 @@ export const upload = async (req, res, next) => {
 
   const { files } = req.files;
   const { description, userName } = req.body;
+  let date = new Date().toLocaleString("en-US", { timeZone: "America/Toronto" });
+  date = new Date(date);
+  const dateString = `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
 
-  // Create a folder for the user if it doesn't exist
-  const directoryName = userName.split(' ').join('_');
-  if (!fs.existsSync(`./storage/${directoryName}`)) {
-    fs.mkdirSync(`./storage/${directoryName}`, { recursive: true }, err => {
+  // Check if user main dir exists, if not create it
+  const userDir = req.user.dir;
+  if (!fs.existsSync(`./storage/${userDir}`)) {
+    fs.mkdirSync(`./storage/${userDir}`, { recursive: true }, err => {
       if (err) {
         console.error(err);
         return next(new ErrorResponse('Error creating user directory.', 500));
@@ -32,13 +35,19 @@ export const upload = async (req, res, next) => {
     });
   }
 
-  // save the description in a file and append date to the file name to avoid overwriting
-  const date = new Date();
+  // each upload will be saved in a new directory with the current date inside the user's main dir
+  fs.mkdirSync(`./storage/${userDir}/${dateString}`, { recursive: true }, err => {
+    if (err) {
+      console.error(err);
+      return next(new ErrorResponse('Error creating upload directory.', 500));
+    }
+    console.log('Upload directory created successfully!');
+  });
 
-  const dateString = `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
-  const fileName = `description_${dateString}.txt`;
+  // each upload will have a description file with with the name description_<current_date>
+  const fileContent = `${userName}\n\n${description}\n\nDate: ${new Date(date).toUTCString()}`;
 
-  fs.writeFile(`./storage/${directoryName}/${fileName}.txt`, description, err => {
+  fs.writeFile(`./storage/${userDir}/${dateString}/description_${dateString}.txt`, fileContent, err => {
     if (err) {
       console.error(err);
       return next(new ErrorResponse('Error saving description.', 500));
@@ -52,7 +61,7 @@ export const upload = async (req, res, next) => {
   if (!Array.isArray(files)) {
     // Single file upload
     const file = files;
-    file.mv(`./storage/${directoryName}/${file.name}`, err => {
+    file.mv(`./storage/${userDir}/${dateString}/${file.name}`, err => {
       if (err) {
         console.error(err);
         return next(new ErrorResponse('Error saving file.', 500));
@@ -64,7 +73,7 @@ export const upload = async (req, res, next) => {
     // Multiple files upload
     // loop through all the files and save them in the storage folder
     files.forEach(file => {
-      file.mv(`./storage/${directoryName}/${file.name}`, err => {
+      file.mv(`./storage/${userDir}/${dateString}/${file.name}`, err => {
         if (err) {
           console.error(err);
           return next(new ErrorResponse('Error saving file.', 500));
