@@ -9,7 +9,7 @@ pipeline {
       steps {
         sh 'echo "Cloning repository..."'
         sshagent (credentials: ['jenkins-ssh']) {
-          sh 'git clone git@github.com:neenus/file-uplpad-server.git'
+          sh 'git clone git@github.com:neenus/doc-hub-server.git'
         }
       }
     }
@@ -31,6 +31,12 @@ pipeline {
         sh 'echo "Pushing to DockerHub..."'
         sh 'docker push neenus007/upload-server:${IMAGE_VERSION}.${BUILD_NUMBER}'
         sh 'docker push neenus007/upload-server:latest'
+      }
+    }
+    steage('Logout from DockerHub') {
+      steps {
+        sh 'echo "Logging out from DockerHub..."'
+        sh 'docker logout'
       }
     }
   }
