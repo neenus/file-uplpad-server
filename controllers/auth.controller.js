@@ -1,6 +1,7 @@
 import ErrorResponse from '../utils/errorResponse.js';
 import User from '../models/User.js';
-import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import crypto from 'crypto';
 
 
 // @desc    Register user
@@ -8,6 +9,7 @@ import jwt from 'jsonwebtoken';
 // @access  Public
 export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
+  const dir = crypto.randomBytes(6).toString('hex');
 
   try {
     // Create user
@@ -15,11 +17,14 @@ export const register = async (req, res, next) => {
       name,
       email,
       password,
+      dir,
     });
 
     if (user) {
+      await createUserDirectory(user.dir);
+
       // Create token and send response
-      sendTokenResponse(user, 201, res);
+      await sendTokenResponse(user, 201, res);
     }
   } catch (error) {
     return next(error);
@@ -115,3 +120,15 @@ const sendTokenResponse = (user, statusCode, res) => {
       },
     });
 };
+
+// Helper function to create user directory in storage directory
+const createUserDirectory = async dir => {
+  if (!fs.existsSync(`./storage/${dir}`)) {
+    await fs.mkdir(`./storage/${dir}`, { recursive: true }, err => {
+      if (err) {
+        console.error(err);
+        return next(new ErrorResponse('Error creating user directory.', 500));
+      }
+    });
+  }
+}
