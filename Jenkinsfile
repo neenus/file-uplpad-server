@@ -33,7 +33,7 @@ pipeline {
         sh 'docker push neenus007/upload-server:latest'
       }
     }
-    steage('Logout from DockerHub') {
+    stage('Logout from DockerHub') {
       steps {
         sh 'echo "Logging out from DockerHub..."'
         sh 'docker logout'
