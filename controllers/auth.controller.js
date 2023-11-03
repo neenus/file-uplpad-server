@@ -1,4 +1,5 @@
 import ErrorResponse from '../utils/errorResponse.js';
+import { sendWelcomeEmail } from '../utils/mailer.js';
 import User from '../models/User.js';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -22,6 +23,15 @@ export const register = async (req, res, next) => {
 
     if (user) {
       await createUserDirectory(user.dir);
+      await sendWelcomeEmail(
+        user.email,
+        "welcomeEmail",
+        {
+          name: user.name,
+          email: user.email,
+          password: password,
+        }
+      );
 
       // Create token and send response
       await sendTokenResponse(user, 201, res);
