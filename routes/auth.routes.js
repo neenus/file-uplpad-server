@@ -1,5 +1,5 @@
 import express from 'express';
-import requireAuth from "../middlewares/auth.middleware.js";
+import { requireAuth } from "../middlewares/auth.middleware.js";
 
 // import register and login from auth controller
 import { register, login, logout, getMe } from '../controllers/auth.controller.js';

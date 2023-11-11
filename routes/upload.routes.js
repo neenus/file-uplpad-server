@@ -1,6 +1,6 @@
 import express from 'express';
 import fileUpload from "express-fileupload";
-import requireAuth from "../middlewares/auth.middleware.js";
+import { requireAuth } from "../middlewares/auth.middleware.js";
 
 // import upload controller
 import { upload } from '../controllers/upload.controller.js';
