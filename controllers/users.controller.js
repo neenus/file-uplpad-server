@@ -4,27 +4,37 @@ import User from '../models/User.js';
 // @desc    Get all users
 // @route   GET /api/v1/users
 // @access  Private/Admin
+// @query   page: Number, limit: Number, sort: String, sortType: String asc|desc
 export const getUsers = async (req, res, next) => {
 
-  const { page, limit } = req.query;
+  if (req.user && req.user.role !== 'admin')
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+
+  const { page, limit, sort, sortType } = req.query;
+
+
   const options = {
     page: parseInt(page, 10) || 1,
     limit: parseInt(limit, 10) || 10,
-    sort: { createdAt: -1 },
+    sort: { [sort]: [sortType === "desc" ? -1 : 1] } || { createdAt: -1 },
   };
 
   let data;
-  if (page && limit) {
-    data = {
-      page,
-      limit,
-      users: await User.paginate({}, options),
-    }
+  try {
+    data = await User
+      .find({})
+      .select('-password')
+      .skip((options.page - 1) * options.limit)
+      .limit(options.limit)
+      .sort(options.sort)
+      .exec();
+  } catch (error) {
+    return next(error)
   }
 
   res.status(200).json({
     success: true,
-    data: data || await User.find(),
+    data: data
   });
 };
 
@@ -32,6 +42,9 @@ export const getUsers = async (req, res, next) => {
 // @route   GET /api/v1/users/:id
 // @access  Private/Admin
 export const getUser = async (req, res, next) => {
+  if (req.user && req.user.role !== 'admin')
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+
   try {
     const user = await User.findById(req.params.id);
     res.status(200).json({
@@ -49,19 +62,27 @@ export const getUser = async (req, res, next) => {
 // @route   PUT /api/v1/users/:id
 // @access  Private/Admin
 export const updateUser = async (req, res, next) => {
+  const isAdmin = req.user?.role === 'admin';
+  const isOwnProfile = req.user?.id === req.params.id;
 
   // if req.body is empty, return error
   if (Object.keys(req.body).length === 0)
     return next(new ErrorResponse('Please provide data to update', 400));
 
-  // TODO: to implement user roles so that only admin can update a user
   // check if user is admin or user is updating their own profile
-  // if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-  //   return next(new ErrorResponse('Not authorized to access this route', 401));
-  // }
+  // non-admin users can only update their own profile except for the role
+  if (!isAdmin && !isOwnProfile) {
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+  }
+
+  if (req.body.role && !isAdmin) {
+    return next(new ErrorResponse('Not authorized to update role', 401));
+  }
 
   try {
     const user = await User.findById(req.params.id);
+    if (!user) return next(new ErrorResponse('User not found', 404));
+
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.role = req.body.role || user.role;
