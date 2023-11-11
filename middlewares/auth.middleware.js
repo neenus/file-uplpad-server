@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import ErrorResponse from "../utils/errorResponse.js";
 import User from '../models/User.js';
 
-const requireAuth = async (req, res, next) => {
+export const requireAuth = async (req, res, next) => {
 
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -35,4 +35,9 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
-export default requireAuth;
+export const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role !== 'admin')
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+
+  next();
+}

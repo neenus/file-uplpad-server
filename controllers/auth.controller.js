@@ -102,7 +102,10 @@ export const getMe = async (req, res, next) => {
   // If there is a user, send it back
   res.status(200).json({
     success: true,
-    data: req.user,
+    data: {
+      user: req.user,
+      token: req.cookies.token,
+    }
   });
 };
 
@@ -117,6 +120,9 @@ const sendTokenResponse = (user, statusCode, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
   };
+
+  // Remove password from output
+  user.password = undefined;
 
   // Send response
   res
