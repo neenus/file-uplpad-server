@@ -34,7 +34,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Morgan logger
-app.use(morgan('dev'));
+app.enable('trust proxy');
+process.env.NODE_ENV === 'development' ?
+  app.use(morgan('dev')) :
+  app.use(morgan(':remote-addr - [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length]'));
 
 // Mount routes
 app.use('/api/v1/auth', auth);
