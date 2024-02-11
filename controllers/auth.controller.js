@@ -109,6 +109,8 @@ export const getMe = async (req, res, next) => {
   });
 };
 
+
+// ===================== HELPER FUNCTIONS =====================
 // Helper function to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create Token
@@ -148,3 +150,5 @@ const createUserDirectory = async dir => {
     });
   }
 }
+
+// ===================== END OF HELPER FUNCTIONS =====================

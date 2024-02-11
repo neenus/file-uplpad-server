@@ -1,5 +1,6 @@
 import ErrorResponse from "../utils/errorResponse.js";
 import fs from 'fs';
+import path from 'path';
 
 // @desc    Upload file
 // @route   POST /api/v1/upload
@@ -85,4 +86,47 @@ export const upload = async (req, res, next) => {
   }
 
   res.status(200).send({ success: true, message: 'File uploaded successfully!' });
+};
+
+export const getMyFiles = async (req, res, next) => {
+  if (!req.user)
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+
+  if (!req.user.dir)
+    return next(new ErrorResponse('Something went wrong. Please contact your account administrator.', 500));
+
+  const userDir = req.user.dir;
+
+  let files;
+
+  try {
+    files = fs.readdirSync(path.join('./storage', userDir));
+  } catch (err) {
+    console.error(err);
+    return next(new ErrorResponse('Error reading files. Contact your account administrator', 500));
+  }
+
+  files = files.filter(file => !file.includes('description_'));
+  console.log({ userDir })
+  // get details for each file
+  files = files.map(file => getFileDetails(userDir, file));
+
+  res.status(200).send({ success: true, files });
+};
+
+// Helper function to get children file details
+const getChildrenFileDetails = (dir, files) => files.map(file => getFileDetails(dir, file));
+
+// Helper function to get file details
+const getFileDetails = (dir, file) => {
+  const fileDetails = fs.statSync(path.join('./storage', dir, file));
+  return {
+    name: file,
+    size: fileDetails.size,
+    created: fileDetails.birthtime,
+    modified: fileDetails.mtime,
+    isDirectory: fileDetails.isDirectory(),
+    isFile: fileDetails.isFile(),
+    children: fileDetails.isDirectory() ? getChildrenFileDetails(`${dir}/${file}`, fs.readdirSync(path.join('./storage', dir, file))) : null
+  };
 };
