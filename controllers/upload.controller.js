@@ -1,5 +1,6 @@
 import ErrorResponse from "../utils/errorResponse.js";
 import fs from 'fs';
+import { notifyAdmin } from "../utils/mailer.js";
 
 // @desc    Upload file
 // @route   POST /api/v1/upload
@@ -84,5 +85,7 @@ export const upload = async (req, res, next) => {
     });
   }
 
+  // notify admin of new upload by email and send response
+  notifyAdmin(files, req.user);
   res.status(200).send({ success: true, message: 'File uploaded successfully!' });
 };
