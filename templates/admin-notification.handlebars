@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>New File(s) Uploaded</title>
+
+    <style>
+      body {
+        font-family: sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      p {
+        margin-bottom: 1rem;
+      }
+
+      ul {
+        margin-bottom: 1rem;
+        list-style: none;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <p>
+      {{userName}} uploaded new file(s) to DOC-HUB
+    </p>
+
+    <p>
+      List of files uploaded:
+      {{#each files}}
+      <ul>
+        <li>{{this}}</li>
+      </ul>
+      {{/each}}
+    </p>
+
+    <p>
+      User directory is: {{userDir}}
+      <br>
+      User ID is: {{userId}}
+    </p>
+  </body>
+
+</html>

@@ -38,3 +38,32 @@ export const sendWelcomeEmail = (to, templateName, data) => {
     });
   });
 };
+
+// Send email to notify admin of new upload
+export const notifyAdmin = (files, user) => {
+  const template = `./templates/admin-notification.handlebars`;
+  const data = {
+    userName: user.name,
+    userDir: user.dir,
+    userId: user._id,
+    files: files.map(file => file.name)
+  }
+
+  const mailOptions = {
+    from: process.env.NODEMAILER_FROM,
+    to: process.env.NODEMAILER_ADMIN,
+    subject: `DOC-HUB New file uploaded by ${user.name}`,
+    html: compileTemplate(template, data),
+  };
+
+  return new Promise((resolve, reject) => {
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        reject(new ErrorResponse(error.message, 500));
+      } else {
+        resolve(info);
+      }
+    });
+  });
+
+};
