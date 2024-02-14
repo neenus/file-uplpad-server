@@ -46,7 +46,7 @@ export const notifyAdmin = (files, user) => {
     userName: user.name,
     userDir: user.dir,
     userId: user._id,
-    files: files.map(file => file.name)
+    files: !Array.isArray(files) ? [files].map(file => file.name) : files.map(file => file.name),
   }
 
   const mailOptions = {
@@ -67,3 +67,21 @@ export const notifyAdmin = (files, user) => {
   });
 
 };
+
+// Send email to notify admin of infected files
+export const notifyAdminVirus = (infectedFiles, user) => {
+  return new Promise((resolve, reject) => {
+    transporter.sendMail({
+      from: process.env.NODEMAILER_FROM,
+      to: process.env.NODEMAILER_ADMIN,
+      subject: `DOC-HUB Virus detected in files uploaded by ${user.name}`,
+      html: `<p>DOC-HUB has detected a virus in the following files uploaded by ${user.name}:</p><p>${infectedFiles.join(', ')}</p>`,
+    }, function (error, info) {
+      if (error) {
+        reject(new ErrorResponse(error.message, 500));
+      } else {
+        resolve(info);
+      }
+    });
+  });
+}
