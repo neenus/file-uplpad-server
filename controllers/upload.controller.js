@@ -1,6 +1,7 @@
 import ErrorResponse from "../utils/errorResponse.js";
 import fs from 'fs';
-import { notifyAdmin } from "../utils/mailer.js";
+import { notifyAdmin, notifyAdminVirus } from "../utils/mailer.js";
+import { scanFiles } from "../utils/fileScanner.js";
 
 // @desc    Upload file
 // @route   POST /api/v1/upload
@@ -34,6 +35,18 @@ export const upload = async (req, res, next) => {
 
       console.log('User directory created successfully!');
     });
+  }
+
+  // scan files for viruses
+  try {
+    const infectedFiles = await scanFiles(files);
+    if (infectedFiles.length > 0) {
+      notifyAdminVirus(infectedFiles, req.user);
+      return next(new ErrorResponse('Virus detected in files uploaded.', 400));
+    }
+  } catch (err) {
+    console.error("err scanning files for viruses: ", err);
+    return next(new ErrorResponse('Error scanning files for viruses.', 500));
   }
 
   // each upload will be saved in a new directory with the current date inside the user's main dir
