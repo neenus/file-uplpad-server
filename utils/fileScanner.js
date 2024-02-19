@@ -1,13 +1,19 @@
 import NodeClam from 'clamscan';
 
 export const scanFiles = async files => {
+
+  const clamdscanOptions = process.env.NODE_ENV === 'production' ? {
+    host: process.env.CLAMAV_HOST,
+    port: process.env.CLAMAV_PORT,
+  } : {
+    socket: '/var/run/clamav/clamd.ctl',
+    local_fallback: true,
+    path: '/usr/bin/clamdscan',
+    config_file: '/etc/clamav/clamd.conf',
+  };
+
   const clamscan = await new NodeClam().init({
-    clamdscan: {
-      socket: '/var/run/clamav/clamd.ctl',
-      local_fallback: true,
-      path: '/usr/bin/clamdscan',
-      config_file: '/etc/clamav/clamd.conf',
-    },
+    clamdscan: clamdscanOptions,
     remove_infected: true, // Removes infected files
     quarantine_infected: './quarantine', // Move file here. remove_infected must be TRUE
     scan_log: '/var/log/clamav/clamscan.log', // You're a detail-oriented security professional. You'll enable this, right?
