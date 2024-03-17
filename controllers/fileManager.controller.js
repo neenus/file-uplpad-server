@@ -14,8 +14,6 @@ let accessDetails = null;
 let rootName = "";
 const pattern = /(\.\.\/)/g;
 
-const contentRootPath = process.cwd() + "/storage/";
-
 let permission = {
   Allow: "allow",
   Deny: "deny"
@@ -57,15 +55,20 @@ class AccessRules {
 
 
 // ============================ File Manager Helper Methods ============================
+export const GetContentRootPath = (req, res) => {
+  const contentRootPath = `${process.cwd()}/storage/${req.params.dir}/`;
+  return contentRootPath;
+}
+
 /**
  * Reads text from the file asynchronously and returns a Promise.
  */
 const GetFiles = async (req, res) => {
+  const contentRootPath = GetContentRootPath(req, res);
   return new Promise((resolve, reject) => {
     const directory = contentRootPath + req.body.path.replace(pattern, "");
     fs.readdir(directory, (err, files) => {
       if (err) {
-        console.log(err);
         reject(err);
       } else {
         resolve(files);
@@ -98,9 +101,10 @@ const checkForDuplicates = (directory, name, isFile) => {
  * function to rename the folder
  */
 const renameFolder = async (req, res) => {
+  const contentRootPath = GetContentRootPath(req, res);
   try {
-    const oldName = req.body.data[0].name.split("/").pop();
-    const newName = req.body.newName.split("/").pop();
+    const oldName = req.body.data[0].name;
+    const newName = req.body.newName;
     const permission = getPermission(contentRootPath + req.body.data[0].filterPath, oldName, req.body.data[0].isFile, contentRootPath, req.body.data[0].filterPath);
     if (permission != null && (!permission.read || !permission.write)) {
       const errorMsg = new Error();
@@ -110,8 +114,8 @@ const renameFolder = async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       res.json(JSON.stringify(response));
     } else {
-      const oldDirectoryPath = path.join(contentRootPath + req.body.data[0].filterPath, oldName);
-      const newDirectoryPath = path.join(contentRootPath + req.body.data[0].filterPath, newName);
+      const oldDirectoryPath = path.join(contentRootPath + req.body.data[0].filterPath + "/", oldName);
+      const newDirectoryPath = path.join(contentRootPath + req.body.data[0].filterPath + "/", newName);
       if (checkForDuplicates(contentRootPath + req.body.data[0].filterPath, newName, req.body.data[0].isFile)) {
         const errorMsg = new Error();
         errorMsg.message = `A file or folder with the name ${req.body.name} already exists.`;
@@ -121,7 +125,7 @@ const renameFolder = async (req, res) => {
         res.json(JSON.stringify(response));
       } else {
         fs.renameSync(oldDirectoryPath, newDirectoryPath);
-        const data = await FileManagerDirectoryContent(req, res, newDirectoryPath + "/");
+        const data = await FileManagerDirectoryContent(req, res, newDirectoryPath + req.body.path);
         const response = { files: data };
         res.setHeader('Content-Type', 'application/json');
         res.json(JSON.stringify(response));
@@ -485,16 +489,16 @@ const MoveFolder = (source, dest) => {
   files.forEach(function (file) {
     const curSource = path.join(source, file);
     const curDest = path.join(dest, file);
-    if (fs.lstatSync(curSource).isDirectory()) {
-      MoveFolder(curSource, curDest);
-      fs.rmdirSync(curSource);
-    } else {
-      fs.copyFileSync(curSource, curDest, (err) => {
+    if (!fs.lstatSync(curSource).isDirectory()) {
+      fs.copyFileSync(curSource, curDest, fs.constants.COPYFILE_EXCL, (err) => {
         if (err) throw err;
       });
       fs.unlinkSync(curSource, function (err) {
         if (err) throw err;
       });
+    } else {
+      MoveFolder(curSource, curDest);
+      fs.rmdirSync(curSource);
     }
   });
 }
@@ -669,6 +673,7 @@ const getPermission = (filepath, name, isFile, contentRootPath, filterPath) => {
  * returns the current working directories
  */
 const FileManagerDirectoryContent = async (req, res, filepath, searchFilterPath) => {
+  const contentRootPath = GetContentRootPath(req, res);
   try {
     replaceRequestParams(req, res);
     const stats = await fs.promises.stat(filepath);
@@ -712,6 +717,7 @@ const replaceRequestParams = (req, res) => req.body.path = (req.body.path && req
  * Gets the imageUrl from the client
  */
 export const GetImage = (req, res) => {
+  const contentRootPath = GetContentRootPath(req, res);
   replaceRequestParams(req, res);
   const image = req.query.path.split("/").length > 1 ? req.query.path : "/" + req.query.path;
   const pathPermission = getPermission(contentRootPath + image.substr(0, image.lastIndexOf("/")), image.substr(image.lastIndexOf("/") + 1, image.length - 1), true, contentRootPath, image.substr(0, image.lastIndexOf("/")));
@@ -734,6 +740,7 @@ export const GetImage = (req, res) => {
  * Handles the upload request
  */
 export const Upload = (req, res) => {
+  const contentRootPath = GetContentRootPath(req, res);
   replaceRequestParams(req, res);
   const pathPermission = getPathPermission(true, JSON.parse(req.body.data).name, contentRootPath + req.body.path, contentRootPath, JSON.parse(req.body.data).filterPath);
   if (pathPermission != null && (!pathPermission.read || !pathPermission.upload)) {
@@ -760,6 +767,7 @@ export const Upload = (req, res) => {
  * Download a file or folder
  */
 export const Download = (req, res) => {
+  const contentRootPath = GetContentRootPath(req, res);
   replaceRequestParams(req, res);
   const downloadObj = JSON.parse(req.body.downloadInput);
   let permissionDenied = false;
@@ -816,6 +824,7 @@ export const Download = (req, res) => {
  * Handles the read request
  */
 export const Read = (req, res) => {
+  const contentRootPath = GetContentRootPath(req, res);
   replaceRequestParams(req, res);
   req.setTimeout(0);
   function getRules() {
@@ -995,6 +1004,7 @@ export const Read = (req, res) => {
   }
 
   function ReadDirectories(file) {
+    const contentRootPath = GetContentRootPath(req, res);
     const cwd = {};
     let directoryList = [];
     function stats(file) {
