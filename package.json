@@ -10,8 +10,6 @@
     "start": "pm2-runtime ./index.js"
   },
   "dependencies": {
-    "@syncfusion/ej2-filemanager-node-filesystem": "^18.1.54",
-    "archiver": "^7.0.0",
     "bcryptjs": "^2.4.3",
     "clamscan": "^2.1.2",
     "cookie-parser": "^1.4.6",
@@ -23,9 +21,7 @@
     "jsonwebtoken": "^9.0.1",
     "mongoose": "^7.0.2",
     "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.7",
-    "yargs": "^17.7.2"
+    "nodemailer": "^6.9.7"
   },
   "type": "module",
   "devDependencies": {
