@@ -9,8 +9,9 @@ import crypto from 'crypto';
 // @route   POST /api/v1/auth/register
 // @access  Public
 export const register = async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, role } = req.body;
   const dir = crypto.randomBytes(6).toString('hex');
+  const password = crypto.randomBytes(6).toString("base64url");
 
   try {
     // Create user
@@ -19,6 +20,7 @@ export const register = async (req, res, next) => {
       email,
       password,
       dir,
+      role,
     });
 
     if (user) {
@@ -33,8 +35,21 @@ export const register = async (req, res, next) => {
         }
       );
 
-      // Create token and send response
-      await sendTokenResponse(user, 201, res);
+      // send response without password in the user object
+      return res.status(201).json({
+        success: true,
+        data: {
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            dir: user.dir,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          },
+        }
+      });
     }
   } catch (error) {
     return next(error);
