@@ -1,5 +1,7 @@
 import ErrorResponse from '../utils/errorResponse.js';
 import User from '../models/User.js';
+import fs from 'fs';
+import path from 'path';
 
 // @desc    Get all users
 // @route   GET /api/v1/users
@@ -105,6 +107,9 @@ export const deleteUser = async (req, res, next) => {
   try {
     const user = await User.findById(userId);
     if (!user) return next(new ErrorResponse('User not found', 404));
+
+    // Remove user directory and all files.
+    await removeUserDir(user.dir);
     await user.deleteOne();
 
     res.status(200).json({
@@ -116,4 +121,17 @@ export const deleteUser = async (req, res, next) => {
     return next(error);
   }
 
+}
+
+// Helper function to remove user directory and all files.
+const removeUserDir = async (dir) => {
+  const userDir = path.join(process.env.FILE_STORAGE_PATH, dir);
+
+  if (!fs.existsSync(userDir)) return next(new ErrorResponse('User directory not found', 404));
+
+  try {
+    await fs.rmdirSync(userDir, { recursive: true });
+  } catch (error) {
+    return next(new ErrorResponse('Error deleting user directory', 500));
+  }
 }
