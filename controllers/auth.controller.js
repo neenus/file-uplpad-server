@@ -158,7 +158,7 @@ const createUserDirectory = async dir => {
     await fs.mkdir(`./storage/${dir}`, { recursive: true }, err => {
       if (err) {
         console.error(err);
-        return next(new ErrorResponse('Error creating user directory.', 500));
+        return new ErrorResponse('Error creating user directory.', 500);
       }
     });
   }

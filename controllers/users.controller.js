@@ -124,14 +124,11 @@ export const deleteUser = async (req, res, next) => {
 }
 
 // Helper function to remove user directory and all files.
-const removeUserDir = async (dir) => {
+const removeUserDir = async dir => {
   const userDir = path.join(process.env.FILE_STORAGE_PATH, dir);
-
-  if (!fs.existsSync(userDir)) return next(new ErrorResponse('User directory not found', 404));
-
   try {
-    await fs.rmdirSync(userDir, { recursive: true });
+    await fs.rmSync(userDir, { recursive: true });
   } catch (error) {
-    return next(new ErrorResponse('Error deleting user directory', 500));
+    return new ErrorResponse('Error deleting user directory', 500);
   }
 }
