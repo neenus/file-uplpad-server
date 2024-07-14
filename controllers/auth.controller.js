@@ -3,7 +3,7 @@ import { sendWelcomeEmail } from '../utils/mailer.js';
 import User from '../models/User.js';
 import fs from 'fs';
 import crypto from 'crypto';
-
+import jwt from 'jsonwebtoken';
 
 // @desc    Register user
 // @route   POST /api/v1/auth/register
@@ -84,6 +84,9 @@ export const login = async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 };
 
+// @desc    Logout user
+// @route   GET /api/v1/auth/logout
+// @access  Private
 export const logout = async (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
@@ -102,6 +105,43 @@ export const logout = async (req, res, next) => {
 
   } catch (error) {
     return next(error);
+  }
+};
+
+// @desc  Validate user token
+// @route GET /api/v1/auth/validate
+// @access Private
+export const validate = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // Set token from Bearer token in header
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies && req.cookies.token) {
+    // Set token from cookie
+    token = req.cookies.token;
+  }
+
+  if (!token) {
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return next(new ErrorResponse('Invalid credentials', 401));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user,
+        token
+      }
+    });
+  } catch (error) {
+    next(new ErrorResponse('Not authorized to access this route', 401));
   }
 };
 
