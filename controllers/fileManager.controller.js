@@ -755,9 +755,11 @@ export const Upload = (req, res) => {
     const fileName = req.files.map(file => file.originalname);
     const filePath = path.join(contentRootPath, req.body.path);
     for (let i = 0; i < fileName.length; i++) {
-      fs.rename('./' + fileName[i], path.join(filePath, fileName[i]), function (err) {
-        if (err) throw err;
-      });
+      // fs.rename('./' + fileName[i], path.join(filePath, fileName[i]), function (err) {
+      //   if (err) throw err;
+      // });
+      fs.copyFileSync('./' + fileName[i], path.join(filePath, fileName[i]));
+      fs.unlinkSync('./' + fileName[i]);
     }
     res.send('Success');
   }
