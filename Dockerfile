@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:slim
+FROM --platform=linux/amd64 node:lts-slim
 
 # Set node environment to production
 ENV NODE_ENV=production
