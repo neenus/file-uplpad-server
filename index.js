@@ -12,6 +12,7 @@ import users from './routes/users.routes.js';
 import upload from './routes/upload.routes.js';
 import health from './routes/health.routes.js';
 import fileManager from './routes/fileManager.routes.js';
+import tasks from './routes/tasks.routes.js';
 
 dotenv.config({ path: './config/.env' });
 
@@ -47,6 +48,7 @@ app.use('/api/v1/users', users);
 app.use('/api/v1/upload', upload);
 app.use('/api/v1/health', health);
 app.use('/api/v1/filemanager', fileManager);
+app.use('/api/v1/tasks', tasks);
 
 // Error Handler Middleware
 app.use(errorHandler);
