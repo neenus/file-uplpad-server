@@ -12,7 +12,7 @@ const TaskSchema = new mongoose.Schema({
   frequency: {
     type: String,
     required: [true, 'Frequency is required'],
-    enum: ['daily', 'weekly', 'biweekly', 'semi-monthly', 'monthly', 'quarterly', 'annually', 'once'],
+    enum: ['Daily', 'Weekly', 'Biweekly', 'Semi-monthly', 'Monthly', 'Quarterly', 'Annually', 'Once'],
     default: 'once'
   },
   dueDate: {
