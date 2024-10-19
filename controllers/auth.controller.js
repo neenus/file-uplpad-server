@@ -1,5 +1,5 @@
 import ErrorResponse from '../utils/errorResponse.js';
-import { sendWelcomeEmail } from '../utils/mailer.js';
+import { sendEmail } from '../utils/mailer.js';
 import User from '../models/User.js';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -25,7 +25,7 @@ export const register = async (req, res, next) => {
 
     if (user) {
       await createUserDirectory(user.dir);
-      await sendWelcomeEmail(
+      await sendEmail(
         user.email,
         "welcomeEmail",
         {
@@ -162,6 +162,52 @@ export const getMe = async (req, res, next) => {
       token: req.cookies.token,
     }
   });
+};
+
+// @desc   Reset user password
+// @route  POST /api/v1/auth/resetpassword
+// @access Private - only admin users can reset passwords
+export const resetPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  console.log({ user: req.user, email });
+
+  // Verify if user requesting password reset exists and is an admin
+  // Verify if user email exists in database
+  // if user email exists, generate a new random password and send it to the user
+
+  if (!req.user || req.user.role !== 'admin') {
+    return next(new ErrorResponse('Not authorized to access this route', 401));
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  const newPassword = crypto.randomBytes(6).toString("base64url");
+
+  console.log({ newPassword });
+  user.password = newPassword;
+  await user.save();
+
+  await sendEmail(
+    user.email,
+    "password-reset-email",
+    {
+      name: user.name,
+      email: user.email,
+      password: newPassword,
+    }
+  );
+
+  res.status(200).json({
+    success: true,
+    data: {
+      message: 'Password reset email sent',
+    }
+  });
+
 };
 
 // Helper function to get token from model, create cookie and send response
