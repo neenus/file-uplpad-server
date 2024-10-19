@@ -17,14 +17,15 @@ const compileTemplate = (templatePath, data) => {
   return template(data);
 };
 
-export const sendWelcomeEmail = (to, templateName, data) => {
+export const sendEmail = (to, templateName, data) => {
   const templatePath = `./templates/${templateName}.handlebars`;
   data.url = process.env.NODE_ENV === 'production' ? process.env.PROD_CLIENT_URL : process.env.DEV_CLIENT_URL;
+  const subject = templateName === 'welcome-email' ? 'NR Accounting has invited you to use Doc-Hub' : 'Doc-Hub Password Reset';
 
   const mailOptions = {
     from: process.env.NODEMAILER_FROM,
     to,
-    subject: "NR Accounting has invited you to use Doc-Hub",
+    subject: subject,
     html: compileTemplate(templatePath, data),
   };
 
