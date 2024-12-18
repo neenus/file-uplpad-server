@@ -20,8 +20,6 @@ export const getUsers = async (req, res, next) => {
     sort: sort ? { [sort]: sortType === "desc" ? -1 : 1 } : { createdAt: -1 },
   };
 
-  console.log({ options });
-
   let data;
   try {
     data = await User
