@@ -14,12 +14,13 @@ export const getUsers = async (req, res, next) => {
 
   const { page, limit, sort, sortType } = req.query;
 
-
   const options = {
     page: parseInt(page, 10) || 1,
     limit: parseInt(limit, 10) || 10,
-    sort: { [sort]: [sortType === "desc" ? -1 : 1] } || { createdAt: -1 },
+    sort: sort ? { [sort]: sortType === "desc" ? -1 : 1 } : { createdAt: -1 },
   };
+
+  console.log({ options });
 
   let data;
   try {
