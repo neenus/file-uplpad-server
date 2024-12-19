@@ -10,7 +10,7 @@
     "start": "pm2-runtime ./index.js"
   },
   "dependencies": {
-    "@syncfusion/ej2-filemanager-node-filesystem": "^18.1.54",
+    "@syncfusion/ej2-filemanager-node-filesystem": "^17.2.34",
     "archiver": "^7.0.0",
     "bcryptjs": "^2.4.3",
     "clamscan": "^2.1.2",
